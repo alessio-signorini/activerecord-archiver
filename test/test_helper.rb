@@ -1,4 +1,4 @@
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
-require "activerecord/archive"
+require "active_record/archiver"
 
 require "minitest/autorun"
