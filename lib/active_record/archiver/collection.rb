@@ -1,4 +1,4 @@
-module ActiveRecord::Archiver
+module ActiveRecord; module Archiver
   class Collection
 
 
@@ -89,4 +89,4 @@ module ActiveRecord::Archiver
     end
 
   end
-end
+end; end

@@ -1,6 +1,6 @@
 require 'aws-sdk-s3'
 
-module ActiveRecord::Archiver::Store
+module ActiveRecord; module Archiver; module Store
   class S3
 
 
@@ -24,7 +24,7 @@ module ActiveRecord::Archiver::Store
         content_encoding:       'gzip',
 
         bucket: @bucket,
-        key:    path,
+        key:    path + '.gz',
         body:   Zlib.gzip(data)
       })
 
@@ -45,4 +45,4 @@ module ActiveRecord::Archiver::Store
 
 
   end
-end
+end; end; end

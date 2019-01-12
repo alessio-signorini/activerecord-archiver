@@ -1,4 +1,6 @@
-require "erb"
+require 'active_record/archiver/collection'
+require 'active_record/archiver/store/s3'
+require 'active_record/archiver/version'
 
 module ActiveRecord
   module Archiver
@@ -17,8 +19,8 @@ module ActiveRecord
     end
 
 
-    def self.archive
-      collections.each do |collection|
+    def self.archive(only=nil)
+      collections.select{|x| only.nil? || x.name == only}.each do |collection|
         collection.find_in_batches do |batch|
           store.write(batch, collection.name)
         end
