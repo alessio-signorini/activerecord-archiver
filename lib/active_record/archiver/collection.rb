@@ -9,9 +9,11 @@ module ActiveRecord; module Archiver
     end
 
 
-    def find_in_batches(args={})
-      base_object.where(clause).find_in_batches(args) do |batch|
-        yield(batch) && update_last_fetched(batch)
+    def find_in_json_batches(args={})
+      relation = base_object.where(clause)
+
+      in_json_batches(relation, args) do |batch, max|
+        yield(batch) && update_last_fetched(max)
       end
     end
 
@@ -50,9 +52,7 @@ module ActiveRecord; module Archiver
     end
 
 
-    def update_last_fetched(batch)
-      batch_max = batch.pluck(track_by).max
-
+    def update_last_fetched(batch_max)
       if last_fetched.nil? || batch_max > last_fetched
         Rails.cache.write(cache_key, batch_max)
       end
@@ -87,6 +87,46 @@ module ActiveRecord; module Archiver
     def model
       @args['model']
     end
+
+
+    def item_size
+      @item_size ||= base_object.last.to_json.size
+    end
+
+
+    def max_batch_size
+      @max_batch_size ||= max_memory_size / item_size
+    end
+
+
+    def max_memory_size
+      @args['max_memory_size'] || 50000000
+    end
+
+
+    def append(data, batch)
+      data.push(*batch.map{|x| x.to_json})
+    end
+
+
+    def in_json_batches(relation, args={})
+      data = []
+      max  = nil
+
+      relation.find_in_batches(args) do |batch|
+        batch_max = batch.pluck(track_by).max
+        max = batch_max if max.nil? || batch_max > max
+
+        data += batch.map{|x| x.to_json}
+
+        if data.size > max_batch_size
+          yield(data, max) && data.clear
+        end
+      end
+
+      yield(data, max)
+    end
+
 
   end
 end; end

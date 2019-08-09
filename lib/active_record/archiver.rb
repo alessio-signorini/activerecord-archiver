@@ -20,9 +20,9 @@ module ActiveRecord
 
 
     def self.archive(only=nil)
-      collections.select{|x| only.nil? || x.name == only}.each do |collection|
-        collection.find_in_batches do |batch|
-          store.write(batch, collection.name)
+      collections.select{|x| only.nil? || Array(only).include?(x.name)}.each do |collection|
+        collection.find_in_json_batches do |json_array|
+          store.write(json_array, collection.name)
         end
       end
     end

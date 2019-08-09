@@ -20,7 +20,7 @@ module ActiveRecord; module Archiver; module Store
 
       response = @client.put_object({
         server_side_encryption: 'aws:kms',
-        content_type:           'application/json',
+        content_type:           'application/jsonl',
         content_encoding:       'gzip',
 
         bucket: @bucket,
@@ -28,12 +28,12 @@ module ActiveRecord; module Archiver; module Store
         body:   Zlib.gzip(data)
       })
 
-      return response.success?
+      return response.successful?
     end
 
 
     def format(data)
-      data.map{|x| x.to_json}.join("\n")
+      data.join("\n")
     end
 
 
