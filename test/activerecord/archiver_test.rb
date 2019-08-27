@@ -9,7 +9,7 @@ class ActiveRecord::ArchiverTest < Minitest::Test
   def test_overridden_config
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    assert ActiveRecord::Archiver.config['collections'].include?('connections')
+    assert ActiveRecord::Archiver.config['models'].any?{ |s| s["model"] == ('Connection') }
   end
 
   def test_archive_connections
@@ -38,7 +38,7 @@ class ActiveRecord::ArchiverTest < Minitest::Test
     ActiveRecord::Archiver.stubs(:config).returns(config_with_sql_injection)
 
     assert_abort do
-      ActiveRecord::Archiver.archive('bad_type')
+      ActiveRecord::Archiver.archive('Connection')
     end
   end
 
@@ -57,12 +57,14 @@ class ActiveRecord::ArchiverTest < Minitest::Test
           "region"            => "us-east-1"
         }
       },
-      "collections"=>[
-        "connections",
+      "models"=>[
         {
-          "events"          => nil,
-          "track_by"        => "updated_at",
+          "model"           => "Connection"
+        },
+        {
           "model"           => "Activity",
+          "folder_name"     => "events",
+          "track_by"        => "updated_at",
           "starting_at"     => "2019-01-01",
           "max_memory_size" => 100
         }
@@ -74,11 +76,11 @@ class ActiveRecord::ArchiverTest < Minitest::Test
 
   def config_with_sql_injection
     {
-      "collections"=>[
+      "models"=>[
         {
-          "bad_type"        => nil,
-          "track_by"        => "weird_key",
-          "model"           => "Connection"
+          "model"           => "Connection",
+          "folder_name"     => "bad_type",
+          "track_by"        => "weird_key"
         }
       ]
     }

@@ -13,8 +13,8 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
   def test_initialize_with_name
     ActiveRecord::Archiver::Collection.any_instance.stubs(:validate).returns(true)
 
-    collection = ActiveRecord::Archiver::Collection.new('just_string')
-    assert_equal 'just_string', collection.name
+    collection = ActiveRecord::Archiver::Collection.new('JustString')
+    assert_equal 'just_strings', collection.name
   end
 
   def test_validate_with_bad_config
@@ -43,11 +43,12 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
     assert klass.empty?
   end
 
+
   def good_config
     {
-      "events"          => nil,
-      "track_by"        => "updated_at",
       "model"           => "Activity",
+      "folder_name"     => "events",
+      "track_by"        => "updated_at",
       "starting_at"     => "2019-01-01",
       "max_memory_size" => 100
     }
@@ -56,18 +57,18 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
 
   def id_based_collection
     {
-      "impressions"     => nil,
-      "track_by"        => "id",
-      "model"           => "Impression"
+      "model"           => "Impression",
+      "folder_name"     => "impressions",
+      "track_by"        => "id"
     }
   end
 
 
   def bad_config
     {
-      "bad_type"        => nil,
-      "track_by"        => "weird_key",
-      "model"           => "Connection"
+      "model"           => "Connection",
+      "folder_name"     => "bad_type",
+      "track_by"        => "weird_key"
     }
   end
 

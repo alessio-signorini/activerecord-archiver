@@ -1,9 +1,11 @@
+require 'active_support/core_ext/string'
+
 module ActiveRecord; module Archiver
   class Collection
 
 
     def initialize(args)
-      @args = args.is_a?(String) ? {'name' => args} : args
+      @args = args.is_a?(String) ? {'model' => args} : args
 
       validate
     end
@@ -19,7 +21,7 @@ module ActiveRecord; module Archiver
 
 
     def name
-      @args['name'] || @args.keys.first
+      @args['folder_name'] || model.underscore.pluralize
     end
 
 
@@ -27,14 +29,13 @@ module ActiveRecord; module Archiver
 
 
     def validate
-      model_name = model || name
 
       unless rails_class.present?
-        abort("[ActiveRecord::Archiver] Can not find any class for #{model_name}']}")
+        abort("[ActiveRecord::Archiver] Can not find any class for #{model}']}")
       end
 
       unless rails_class.new.respond_to?(track_by)
-        abort("[ActiveRecord::Archiver] Possible SQL-injection, track_by is #{track_by} and #{model_name} does not have that field.")
+        abort("[ActiveRecord::Archiver] Possible SQL-injection, track_by is #{track_by} and #{model} does not have that field.")
       end
     end
 

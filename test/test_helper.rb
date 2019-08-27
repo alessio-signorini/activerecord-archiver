@@ -19,7 +19,6 @@ require "minitest/reporters"
 Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new(:color => false)]
 
 
-
 def abort(string)
   raise SystemExit.new(string)
 end

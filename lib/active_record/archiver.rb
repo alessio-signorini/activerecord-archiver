@@ -43,7 +43,7 @@ module ActiveRecord
 
 
     def self.collections
-      config['collections'].map do |args|
+      config['models'].map do |args|
         Collection.new(args)
       end
     end
