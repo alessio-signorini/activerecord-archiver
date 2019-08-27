@@ -10,7 +10,7 @@ module ActiveRecord; module Archiver; module Store
       @path     = args.fetch('path', '%Y/%m/%d/%s.%6N.json.gz')
       @options  = args.fetch('options', {})
 
-      @client = Aws::S3::Client.new(@options.deep_symbolize_keys)
+      create_client
     end
 
 
@@ -18,15 +18,7 @@ module ActiveRecord; module Archiver; module Store
       path = make_path(subpath)
       data = format(batch)
 
-      response = @client.put_object({
-        server_side_encryption: 'aws:kms',
-        content_type:           'application/jsonl',
-        content_encoding:       'gzip',
-
-        bucket: @bucket,
-        key:    path + '.gz',
-        body:   Zlib.gzip(data)
-      })
+      response = send_data(@bucket, path, data)
 
       return response.successful?
     end
@@ -38,11 +30,27 @@ module ActiveRecord; module Archiver; module Store
 
 
     def make_path(string=nil)
-      prefix = @prefix && string ? @prefix.gsub('%s', string) : @prefix
-      full_path = [prefix, @path].compact.join('/')
+      prefix = @prefix % string
+      full_path = File.join(prefix, @path)
       return Time.now.strftime(full_path)
     end
 
+  private
 
+    def create_client
+      @client = Aws::S3::Client.new(@options.deep_symbolize_keys)
+    end
+
+    def send_data(bucket, path, data)
+      @client.put_object({
+        server_side_encryption: 'aws:kms',
+        content_type:           'application/jsonl',
+        content_encoding:       'gzip',
+
+        bucket: bucket,
+        key:    path,
+        body:   Zlib.gzip(data)
+      })
+    end
   end
 end; end; end

@@ -27,12 +27,14 @@ module ActiveRecord; module Archiver
 
 
     def validate
+      model_name = model || name
+
       unless rails_class.present?
-        abort("[ActiveRecord::Archiver] Can not find any class for #{model||name}']}")
+        abort("[ActiveRecord::Archiver] Can not find any class for #{model_name}']}")
       end
 
       unless rails_class.new.respond_to?(track_by)
-        abort("[ActiveRecord::Archiver] Possible SQL-injection, track_by is #{track_by}")
+        abort("[ActiveRecord::Archiver] Possible SQL-injection, track_by is #{track_by} and #{model_name} does not have that field.")
       end
     end
 

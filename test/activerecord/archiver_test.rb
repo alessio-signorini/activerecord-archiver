@@ -6,37 +6,33 @@ class ActiveRecord::ArchiverTest < Minitest::Test
     refute_nil ::ActiveRecord::Archiver::VERSION
   end
 
-
   def test_overridden_config
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
     assert ActiveRecord::Archiver.config['collections'].include?('connections')
   end
 
-
   def test_archive_connections
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    x = stub_request(:put, %r!https://s3.amazonaws.com/test_bucket/first/second/connections/\d+/\d+/\d+/\d+.\d+.json.gz.gz!)
+    s3_request = stub_request(:put, %r!s3.*/connections/\d+/\d+/\d+/\d+.\d+.json.gz!)
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('connections')
 
-    assert_requested x, :times => 1
+    assert_requested s3_request, :times => 1
   end
-
 
   def test_archive_events
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    x = stub_request(:put, %r!https://s3.amazonaws.com/test_bucket/first/second/events/\d+/\d+/\d+/\d+.\d+.json.gz.gz!)
+    s3_request = stub_request(:put, %r!s3.*/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('events')
 
-    assert_requested x, :times => 7
+    assert_requested s3_request, :times => 7
   end
-
 
   def test_archive_badtype
     ActiveRecord::Archiver.stubs(:config).returns(config_with_sql_injection)
@@ -45,7 +41,6 @@ class ActiveRecord::ArchiverTest < Minitest::Test
       ActiveRecord::Archiver.archive('bad_type')
     end
   end
-
 
 
 
@@ -58,7 +53,8 @@ class ActiveRecord::ArchiverTest < Minitest::Test
         "path"        => "%Y/%m/%d/%s.%6N.json.gz",
         "options" => {
           "access_key_id"     => "A",
-          "secret_access_key" => "B"
+          "secret_access_key" => "B",
+          "region"            => "us-east-1"
         }
       },
       "collections"=>[

@@ -9,7 +9,7 @@ module ActiveRecord
     def self.config
       @config ||= YAML.load(ERB.new(config_file.read).result)
 
-      rescue
+    rescue
         abort('[ActiveRecord::Archiver] config/archiver.yml not found or contains errors')
     end
 
@@ -20,7 +20,8 @@ module ActiveRecord
 
 
     def self.archive(only=nil)
-      collections.select{|x| only.nil? || Array(only).include?(x.name)}.each do |collection|
+      specified_collections = Array(only)
+      collections.select{|x| only.nil? || specified_collections.include?(x.name)}.each do |collection|
         collection.find_in_json_batches do |json_array|
           store.write(json_array, collection.name)
         end

@@ -40,6 +40,12 @@ class Activity < FakeActiveRecord
   end
 end
 
+class Impression < FakeActiveRecord
+  def id
+
+  end
+end
+
 class FakeActiveRelation < Array
   def pluck(key)
     self.map{|x| x.send(key)}

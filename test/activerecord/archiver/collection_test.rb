@@ -2,46 +2,46 @@ require "test_helper"
 
 class ActiveRecord::Archiver::CollectionTest < Minitest::Test
 
-  def test_initialize
+  def test_initialize_with_config
     ActiveRecord::Archiver::Collection.any_instance.stubs(:validate).returns(true)
 
-    a = ActiveRecord::Archiver::Collection.new(good_config)
-      assert_equal 'events', a.name
-      assert_equal Activity, a.send(:rails_class)
-
-    c = ActiveRecord::Archiver::Collection.new('just_string')
-      assert_equal 'just_string', c.name
+    collection = ActiveRecord::Archiver::Collection.new(good_config)
+    assert_equal 'events', collection.name
+    assert_equal Activity, collection.send(:rails_class)
   end
 
+  def test_initialize_with_name
+    ActiveRecord::Archiver::Collection.any_instance.stubs(:validate).returns(true)
 
-  def test_validate
+    collection = ActiveRecord::Archiver::Collection.new('just_string')
+    assert_equal 'just_string', collection.name
+  end
+
+  def test_validate_with_bad_config
     assert_abort do
       ActiveRecord::Archiver::Collection.new(bad_config)
     end
-
-    a = ActiveRecord::Archiver::Collection.new(good_config)
-      assert a
   end
 
+  def test_validate_with_good_config
+    collection = ActiveRecord::Archiver::Collection.new(good_config)
+    assert collection
+  end
 
   def test_base_object
-    a = ActiveRecord::Archiver::Collection.new(good_config)
-    c = a.send(:base_object)
+    collection = ActiveRecord::Archiver::Collection.new(good_config)
+    klass = collection.send(:base_object)
 
-    assert_equal Activity, c
+    assert_equal Activity, klass
   end
-
 
   def test_clause
-    a = ActiveRecord::Archiver::Collection.new(id_based_collection)
-    puts 'A'
-    c = a.send(:clause)
+    collection = ActiveRecord::Archiver::Collection.new(id_based_collection)
+    klass = collection.send(:clause)
 
-    assert c.is_a?(Hash)
-    assert c.empty?
+    assert klass.is_a?(Hash)
+    assert klass.empty?
   end
-
-
 
   def good_config
     {
@@ -56,9 +56,9 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
 
   def id_based_collection
     {
-      "events"          => nil,
+      "impressions"     => nil,
       "track_by"        => "id",
-      "model"           => "Activity"
+      "model"           => "Impression"
     }
   end
 
