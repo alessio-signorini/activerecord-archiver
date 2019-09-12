@@ -10,7 +10,7 @@ module ActiveRecord; module Archiver; module Store
       @path     = args.fetch('path', '%Y/%m/%d/%s.%6N.json.gz')
       @options  = args.fetch('options', {})
 
-      create_client
+      @client = create_client
     end
 
 
@@ -38,7 +38,7 @@ module ActiveRecord; module Archiver; module Store
   private
 
     def create_client
-      @client = Aws::S3::Client.new(@options.deep_symbolize_keys)
+      Aws::S3::Client.new(@options.deep_symbolize_keys)
     end
 
     def send_data(bucket, path, data)
