@@ -1,6 +1,6 @@
-require 'active_record/archiver/collection'
-require 'active_record/archiver/store/s3'
-require 'active_record/archiver/version'
+require_relative 'archiver/collection'
+require_relative 'archiver/store/s3'
+require_relative 'archiver/version'
 
 module ActiveRecord
   module Archiver

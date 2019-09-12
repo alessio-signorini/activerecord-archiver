@@ -83,7 +83,7 @@ module ActiveRecord; module Archiver
 
 
     def rails_class
-      @rails_class ||= (model || name.downcase.camelize.singularize).constantize
+      @rails_class ||= model.constantize
     end
 
 
@@ -103,7 +103,7 @@ module ActiveRecord; module Archiver
 
 
     def max_memory_size
-      @args['max_memory_size'] || 50000000
+      @args['max_memory_size'] || 50_000_000
     end
 
 
