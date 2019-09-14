@@ -99,7 +99,7 @@ module ActiveRecord; module Archiver
 
 
     def item_size
-      @item_size ||= base_object.last.to_json.size
+      @item_size ||= base_object.last.attributes.to_json.size
     end
 
 
@@ -114,7 +114,7 @@ module ActiveRecord; module Archiver
 
 
     def append(data, batch)
-      data.push(*batch.map{|x| x.to_json})
+      data.push(*batch.map{|x| x.attributes.to_json})
     end
 
 

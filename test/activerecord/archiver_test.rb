@@ -31,7 +31,7 @@ class ActiveRecord::ArchiverTest < Minitest::Test
 
     ActiveRecord::Archiver.archive('events')
 
-    assert_requested s3_request, :times => 7
+    assert_requested s3_request, :times => 2
   end
 
   def test_archive_badtype
@@ -49,7 +49,7 @@ class ActiveRecord::ArchiverTest < Minitest::Test
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('events')
-    assert_requested s3_request, :times => 7
+    assert_requested s3_request, :times => 2
 
     ActiveRecord::Archiver.archive('events')
     ActiveRecord::Archiver.archive('events')
