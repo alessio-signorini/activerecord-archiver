@@ -56,14 +56,20 @@ module ActiveRecord; module Archiver
 
 
     def update_last_fetched(batch_max)
-      if last_fetched.nil? || batch_max > last_fetched
+
+      if last_fetched.nil? || (!batch_max.nil? && last_fetched < batch_max)
         Rails.cache.write(cache_key, batch_max)
       end
     end
 
+    def other_update_last_fetched(batch_max)
+      last = [batch_max, last_fetched].compact.max
+
+      Rails.cache.write(cache_key, batch_max) if last
+    end
 
     def cache_key
-      ['activerecord-archiver', rails_class.name.downcase].join('/')
+      ['activerecord-archiver', rails_class.name.downcase]
     end
 
 
@@ -117,9 +123,9 @@ module ActiveRecord; module Archiver
       max  = nil
 
       relation.find_in_batches(args) do |batch|
+
         batch_max = batch.pluck(track_by).max
         max = batch_max if max.nil? || batch_max > max
-
         data += batch.map{|x| x.to_json}
 
         if data.size > max_batch_size

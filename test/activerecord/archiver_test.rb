@@ -42,6 +42,20 @@ class ActiveRecord::ArchiverTest < Minitest::Test
     end
   end
 
+  def test_run_it_twice
+    ActiveRecord::Archiver.stubs(:config).returns(good_config)
+
+    s3_request = stub_request(:put, %r!s3.*/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
+      .to_return(status: 200, body: "", headers: {})
+
+    ActiveRecord::Archiver.archive('events')
+    assert_requested s3_request, :times => 7
+
+    ActiveRecord::Archiver.archive('events')
+    ActiveRecord::Archiver.archive('events')
+    ActiveRecord::Archiver.archive('events')
+  end
+
 
 
   def good_config
