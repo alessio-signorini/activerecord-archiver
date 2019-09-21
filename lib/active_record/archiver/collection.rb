@@ -14,6 +14,7 @@ module ActiveRecord; module Archiver
     def find_in_json_batches(args={})
       relation = base_object.where(clause)
 
+      args[:batch_size] = batch_size
       in_json_batches(relation, args) do |batch, max|
         yield(batch) && update_last_fetched(max)
       end
@@ -52,6 +53,12 @@ module ActiveRecord; module Archiver
 
     def last_fetched
       (Rails.cache.fetch(cache_key) || starting_at)
+    end
+
+
+    def batch_size
+      size = @args['batch_size'].to_i
+      return size > 0 ? size : 1000
     end
 
 

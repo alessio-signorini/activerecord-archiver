@@ -8,6 +8,7 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
     collection = ActiveRecord::Archiver::Collection.new(good_config)
     assert_equal 'events', collection.name
     assert_equal Activity, collection.send(:rails_class)
+    assert_equal 5000, collection.send(:batch_size)
   end
 
   def test_initialize_with_name
@@ -41,6 +42,7 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
 
     assert klass.is_a?(Hash)
     assert klass.empty?
+    assert 1000, collection.send(:batch_size)
   end
 
 
@@ -50,7 +52,8 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
       "folder_name"     => "events",
       "track_by"        => "updated_at",
       "starting_at"     => "2019-01-01",
-      "max_memory_size" => 100
+      "max_memory_size" => 100,
+      "batch_size"      => 5000
     }
   end
 
