@@ -79,7 +79,7 @@ any keys that are missing (besides `model` which is required).
 * `starting_at` (optional) - if you do not want to start from the beginning, specify here
   the value of `track_by` to start from (e.g., `12345` or `2019-01-01`)
 * `max_memory_size` (optional) - maximum number of bytes per file
-# `batch_size` (optional) - specifies the size of the batches that are fetched from the database, by default it is 1000
+* `batch_size` (optional) - specifies the size of the batches that are fetched from the database, by default it is 1000
 
 ## Usage
 
