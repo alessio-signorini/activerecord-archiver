@@ -26,6 +26,10 @@ class FakeActiveRecord
     item(9999)
   end
 
+  def self.order args
+    return self
+  end
+
 end
 
 class Connection < FakeActiveRecord

@@ -12,7 +12,7 @@ module ActiveRecord; module Archiver
 
 
     def find_in_json_batches(args={})
-      relation = base_object.where(clause)
+      relation = base_object.where(clause).order("#{track_by} ASC")
 
       args[:batch_size] = batch_size
       in_json_batches(relation, args) do |batch, max|
