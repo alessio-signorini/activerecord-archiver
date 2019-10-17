@@ -12,10 +12,7 @@ module ActiveRecord; module Archiver
 
 
     def find_in_json_batches(args={})
-      relation = base_object.where(clause).order("#{track_by} ASC")
-
-      args[:batch_size] = batch_size
-      in_json_batches(relation, args) do |batch, max|
+      in_json_batches(args) do |batch, max|
         yield(batch) && update_last_fetched(max)
       end
     end
@@ -46,8 +43,18 @@ module ActiveRecord; module Archiver
     end
 
 
-    def clause
-      last_fetched ? ["#{track_by} > ?", last_fetched] : {}
+    def create_relation starting_after:nil, ending_with:nil
+      relation = base_object
+
+      if starting_after.present?
+        relation = relation.where(["#{track_by} > ?", starting_after])
+      end
+
+      if ending_with.present?
+        relation = relation.where(["#{track_by} <= ?", ending_with])
+      end
+
+      return relation
     end
 
 
@@ -68,6 +75,7 @@ module ActiveRecord; module Archiver
         Rails.cache.write(cache_key, batch_max)
       end
     end
+
 
     def other_update_last_fetched(batch_max)
       last = [batch_max, last_fetched].compact.max
@@ -125,13 +133,19 @@ module ActiveRecord; module Archiver
     end
 
 
-    def in_json_batches(relation, args={})
+    def in_json_batches(args={})
       data = []
       max  = nil
 
-      relation.find_in_batches(args) do |batch|
+      previous_stopping_point = last_fetched || base_object.minimum(track_by)
+      max_for_model = base_object.maximum(track_by)
+
+      while true do
+        batch = create_relation(starting_after:previous_stopping_point, ending_with:max_for_model).order("#{track_by}").limit(batch_size).to_a
+        break if batch.empty?
 
         batch_max = batch.pluck(track_by).max
+        previous_stopping_point = batch_max
         max = batch_max if max.nil? || batch_max > max
         data += batch.map{|x| x.attributes.to_json}
 
