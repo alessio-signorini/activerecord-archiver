@@ -26,12 +26,30 @@ class ActiveRecord::ArchiverTest < Minitest::Test
   def test_archive_events
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    s3_request = stub_request(:put, %r!s3.*/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
+    s3_request = stub_request(:put, %r!.*s3.amazonaws.com\/test_bucket\/first\/second\/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('events')
 
-    assert_requested s3_request, :times => 2
+    assert_requested s3_request, :times => 1
+  end
+
+  def test_archive_events_with_logger
+    ActiveRecord::Archiver.stubs(:config).returns(good_config)
+
+    s3_request = stub_request(:put, %r!.*s3.amazonaws.com\/test_bucket\/first\/second\/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
+      .to_return(status: 200, body: "", headers: {})
+
+    logger = mock()
+    logger.expects(:info).with("[ActiveRecord::Archiver] Archiving started")
+    logger.expects(:info).with("[ActiveRecord::Archiver] Archiving events")
+    logger.expects(:info).with("[ActiveRecord::Archiver] Done archiving events")
+    logger.expects(:info).with(regexp_matches(/.* Saving .*/))
+    logger.expects(:info).with("[ActiveRecord::Archiver] Archiving complete")
+
+    ActiveRecord::Archiver.archive('events', logger:logger)
+
+    assert_requested s3_request, :times => 1
   end
 
   def test_archive_badtype
@@ -49,7 +67,7 @@ class ActiveRecord::ArchiverTest < Minitest::Test
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('events')
-    assert_requested s3_request, :times => 2
+    assert_requested s3_request, :times => 1
 
     ActiveRecord::Archiver.archive('events')
     ActiveRecord::Archiver.archive('events')

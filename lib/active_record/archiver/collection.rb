@@ -141,7 +141,13 @@ module ActiveRecord; module Archiver
       max_for_model = base_object.maximum(track_by)
 
       while true do
-        batch = create_relation(starting_after:previous_stopping_point, ending_with:max_for_model).order("#{track_by}").limit(batch_size).to_a
+        begin
+          batch = create_relation(starting_after:previous_stopping_point, ending_with:max_for_model).order("#{track_by}").limit(batch_size).to_a
+        rescue => e
+          ActiveRecord::Archiver::Logger.fatal(e.message)
+          raise
+        end
+
         break if batch.empty?
 
         batch_max = batch.pluck(track_by).max

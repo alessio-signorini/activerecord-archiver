@@ -30,6 +30,22 @@ class FakeActiveRecord
     return self
   end
 
+  def self.limit args
+    return self
+  end
+
+  def self.minimum column_name
+    item(1)[:updated_at]
+  end
+
+  def self.maximum column_name
+    item(9999)[:updated_at]
+  end
+
+  def self.to_a
+    return []
+  end
+
 end
 
 class Connection < FakeActiveRecord

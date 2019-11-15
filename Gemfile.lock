@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    evidation-activerecord-archiver (0.4.0)
+    evidation-activerecord-archiver (0.6.0)
       activesupport (~> 5.2)
       aws-sdk-s3 (~> 1.0)
 
@@ -39,7 +39,7 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     hashdiff (0.3.8)
-    i18n (1.6.0)
+    i18n (1.7.0)
       concurrent-ruby (~> 1.0)
     jmespath (1.4.0)
     metaclass (0.0.4)

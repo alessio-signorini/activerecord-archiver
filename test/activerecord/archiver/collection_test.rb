@@ -36,16 +36,6 @@ class ActiveRecord::Archiver::CollectionTest < Minitest::Test
     assert_equal Activity, klass
   end
 
-  def test_clause
-    collection = ActiveRecord::Archiver::Collection.new(id_based_collection)
-    klass = collection.send(:clause)
-
-    assert klass.is_a?(Hash)
-    assert klass.empty?
-    assert 1000, collection.send(:batch_size)
-  end
-
-
   def good_config
     {
       "model"           => "Activity",

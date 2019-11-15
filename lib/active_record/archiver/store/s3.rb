@@ -42,6 +42,7 @@ module ActiveRecord; module Archiver; module Store
     end
 
     def send_data(bucket, path, data)
+      ActiveRecord::Archiver::Logger.info("Saving '#{path}' to S3 bucket '#{bucket}' (#{data.size} bytes)")
       @client.put_object({
         server_side_encryption: 'aws:kms',
         content_type:           'application/jsonl',
