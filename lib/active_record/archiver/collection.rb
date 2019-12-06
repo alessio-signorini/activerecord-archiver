@@ -135,6 +135,7 @@ module ActiveRecord; module Archiver
 
     def in_json_batches(args={})
       data = []
+      batch = []
       max  = nil
 
       previous_stopping_point = last_fetched || base_object.minimum(track_by)
@@ -142,7 +143,9 @@ module ActiveRecord; module Archiver
 
       while true do
         begin
-          batch = create_relation(starting_after:previous_stopping_point, ending_with:max_for_model).order("#{track_by}").limit(batch_size).to_a
+          ActiveRecord::Base.uncached do
+            batch = create_relation(starting_after:previous_stopping_point, ending_with:max_for_model).order("#{track_by}").limit(batch_size).to_a
+          end
         rescue => e
           ActiveRecord::Archiver::Logger.fatal(e.message)
           raise
