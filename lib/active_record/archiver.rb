@@ -12,7 +12,7 @@ module ActiveRecord
 
     rescue
       message = 'config/archiver.yml not found or contains errors'
-      ActiveRecord::Archiver::Logger.info(message)
+      ActiveRecord::Archiver::Logger.unknown(message)
       abort("[ActiveRecord::Archiver] #{message}")
     end
 
@@ -24,19 +24,19 @@ module ActiveRecord
 
     def self.archive(only=nil, logger:nil)
       ActiveRecord::Archiver::Logger.init(logger)
-      ActiveRecord::Archiver::Logger.info("Archiving started")
+      ActiveRecord::Archiver::Logger.unknown("Archiving started")
 
       specified_collections = Array(only)
       collections.select{|x| only.nil? || specified_collections.include?(x.name)}.each do |collection|
 
-        ActiveRecord::Archiver::Logger.info("Archiving #{collection.name}")
+        ActiveRecord::Archiver::Logger.unknown("Archiving #{collection.name}")
         collection.find_in_json_batches() do |json_array|
           store.write(json_array, collection.name)
         end
-        ActiveRecord::Archiver::Logger.info("Done archiving #{collection.name}")
+        ActiveRecord::Archiver::Logger.unknown("Done archiving #{collection.name}")
       end
 
-      ActiveRecord::Archiver::Logger.info("Archiving complete")
+      ActiveRecord::Archiver::Logger.unknown("Archiving complete")
     end
 
 

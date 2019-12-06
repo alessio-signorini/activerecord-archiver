@@ -153,7 +153,7 @@ module ActiveRecord; module Archiver
         batch_max = batch.pluck(track_by).max
         previous_stopping_point = batch_max
         max = batch_max if max.nil? || batch_max > max
-        data += batch.map{|x| x.attributes.to_json}
+        data.push(batch.map{|x| x.attributes.to_json})
 
         if data.size > max_batch_size || data.sum(&:size) > max_memory_size
           yield(data, max) && data.clear

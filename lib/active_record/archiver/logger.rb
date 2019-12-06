@@ -43,7 +43,7 @@ module ActiveRecord
       end
 
       def self.format_message message
-        "[ActiveRecord::Archiver] #{message}"
+        message
       end
     end
   end

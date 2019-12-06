@@ -41,11 +41,11 @@ class ActiveRecord::ArchiverTest < Minitest::Test
       .to_return(status: 200, body: "", headers: {})
 
     logger = mock()
-    logger.expects(:info).with("[ActiveRecord::Archiver] Archiving started")
-    logger.expects(:info).with("[ActiveRecord::Archiver] Archiving events")
-    logger.expects(:info).with("[ActiveRecord::Archiver] Done archiving events")
-    logger.expects(:info).with(regexp_matches(/.* Saving .*/))
-    logger.expects(:info).with("[ActiveRecord::Archiver] Archiving complete")
+    logger.expects(:unknown).with("Archiving started")
+    logger.expects(:unknown).with("Archiving events")
+    logger.expects(:unknown).with("Done archiving events")
+    logger.expects(:unknown).with(regexp_matches(/Saving .*/))
+    logger.expects(:unknown).with("Archiving complete")
 
     ActiveRecord::Archiver.archive('events', logger:logger)
 
