@@ -20,7 +20,8 @@ class ActiveRecord::ArchiverTest < Minitest::Test
 
     ActiveRecord::Archiver.archive('connections')
 
-    assert_requested s3_request, :times => 1
+    # assert_equal 0, Connection.count
+    assert_requested s3_request, :times => 0
   end
 
   def test_archive_events
@@ -31,7 +32,7 @@ class ActiveRecord::ArchiverTest < Minitest::Test
 
     ActiveRecord::Archiver.archive('events')
 
-    assert_requested s3_request, :times => 1
+    assert_requested s3_request, :times => 0
   end
 
   def test_archive_events_with_logger
@@ -44,12 +45,12 @@ class ActiveRecord::ArchiverTest < Minitest::Test
     logger.expects(:unknown).with("Archiving started")
     logger.expects(:unknown).with("Archiving events")
     logger.expects(:unknown).with("Done archiving events")
-    logger.expects(:unknown).with(regexp_matches(/Saving .*/))
+    # logger.expects(:unknown).with(regexp_matches(/Saving .*/))
     logger.expects(:unknown).with("Archiving complete")
 
     ActiveRecord::Archiver.archive('events', logger:logger)
 
-    assert_requested s3_request, :times => 1
+    assert_requested s3_request, :times => 0
   end
 
   def test_archive_badtype
@@ -67,11 +68,12 @@ class ActiveRecord::ArchiverTest < Minitest::Test
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('events')
-    assert_requested s3_request, :times => 1
+    assert_requested s3_request, :times => 0
 
     ActiveRecord::Archiver.archive('events')
     ActiveRecord::Archiver.archive('events')
     ActiveRecord::Archiver.archive('events')
+    assert_requested s3_request, :times => 0
   end
 
 

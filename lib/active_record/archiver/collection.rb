@@ -1,4 +1,5 @@
 require 'active_support/core_ext/string'
+require 'active_record'
 
 module ActiveRecord; module Archiver
   class Collection

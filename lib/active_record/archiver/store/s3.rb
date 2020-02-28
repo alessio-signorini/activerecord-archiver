@@ -15,7 +15,9 @@ module ActiveRecord; module Archiver; module Store
 
 
     def write(batch, subpath=nil)
+      return true if batch.empty?
       path = make_path(subpath)
+
       data = format(batch)
 
       response = send_data(@bucket, path, data)
