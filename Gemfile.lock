@@ -34,7 +34,7 @@ GEM
     mocha (1.8.0)
       metaclass (~> 0.0.1)
     public_suffix (3.0.3)
-    rake (10.5.0)
+    rake (13.0.1)
     safe_yaml (1.0.4)
     webmock (3.5.1)
       addressable (>= 2.3.6)
@@ -50,7 +50,7 @@ DEPENDENCIES
   byebug (~> 10.0.2)
   minitest (~> 5.0)
   mocha (~> 1.8.0)
-  rake (~> 10.0)
+  rake (~> 13.0)
   webmock (~> 3.5.1)
 
 BUNDLED WITH
