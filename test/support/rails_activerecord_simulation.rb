@@ -26,6 +26,26 @@ class FakeActiveRecord
     item(9999)
   end
 
+  def self.order args
+    return self
+  end
+
+  def self.limit args
+    return self
+  end
+
+  def self.minimum column_name
+    item(1)[:updated_at]
+  end
+
+  def self.maximum column_name
+    item(9999)[:updated_at]
+  end
+
+  def self.to_a
+    return []
+  end
+
 end
 
 class Connection < FakeActiveRecord
@@ -36,6 +56,12 @@ end
 
 class Activity < FakeActiveRecord
   def updated_at
+
+  end
+end
+
+class Impression < FakeActiveRecord
+  def id
 
   end
 end

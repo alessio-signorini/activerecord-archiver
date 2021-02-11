@@ -38,12 +38,16 @@ storage:
     access_key_id: 'A'
     secret_access_key: 'B'
 
-collections:
-  - connections
-  - events:
+models:
+  - model: ClassA
+  - model: ClassB
+    folder_name: a_folder_named_b
     track_by: updated_at
-    model: Activity
     starting_at: '2019-01-01'
+  - model: ClassC
+    starting_at: '2010-06-05'
+  - model: ClassD
+    batch_size: 5000
 ```
 
 #### Storage
@@ -62,17 +66,20 @@ initialization of the `AWS::S3::Client`. You are encouraged to look at the
 to learn how to correctly configure the credentials (e.g., `options` can be
 omitted if you have AWS credentials setup in `ENV`).
 
-#### Collections
-Each entry in `collections` represent a model to archive. It can be a simple
-list of names (e.g., `connections`, `events`) and default options will be used
-(e.g., the model class name will be inferred to be the singular version of
-the name) or each entry can be configured with:
-* `track_by` - the key to use as iteration, by default it is `id` but anything
-  incremental will do (e.g., `updated_at`)
-* `model` - if the entry name does not represent the class you can use this
+#### Models
+Each entry in `models` represent a model to archive. Default options will be used for
+any keys that are missing (besides `model` which is required).
+(e.g., `folder_name` will be a pluralized and snake_cased version of the `model`) or each entry can be configured with:
+* `model`(**required**) - if the entry name does not represent the class you can use this
   option to specify the real class name
-* `starting_at` - if you do not want to start from the beginning, specify here
+* `folder_name` (optional) - the name of the sub-folder (after the `prefix`) where the data
+  will be written
+* `track_by` (optional) - the key to use as iteration, by default it is `id` but anything
+  incremental will do (e.g., `updated_at`)
+* `starting_at` (optional) - if you do not want to start from the beginning, specify here
   the value of `track_by` to start from (e.g., `12345` or `2019-01-01`)
+* `max_memory_size` (optional) - maximum number of bytes per file
+* `batch_size` (optional) - specifies the size of the batches that are fetched from the database, by default it is 1000
 
 ## Usage
 

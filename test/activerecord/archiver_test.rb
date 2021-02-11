@@ -6,46 +6,75 @@ class ActiveRecord::ArchiverTest < Minitest::Test
     refute_nil ::ActiveRecord::Archiver::VERSION
   end
 
-
   def test_overridden_config
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    assert ActiveRecord::Archiver.config['collections'].include?('connections')
+    assert ActiveRecord::Archiver.config['models'].any?{ |s| s["model"] == ('Connection') }
   end
-
 
   def test_archive_connections
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    x = stub_request(:put, %r!https://s3.amazonaws.com/test_bucket/first/second/connections/\d+/\d+/\d+/\d+.\d+.json.gz.gz!)
+    s3_request = stub_request(:put, %r!s3.*/connections/\d+/\d+/\d+/\d+.\d+.json.gz!)
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('connections')
 
-    assert_requested x, :times => 1
+    # assert_equal 0, Connection.count
+    assert_requested s3_request, :times => 0
   end
-
 
   def test_archive_events
     ActiveRecord::Archiver.stubs(:config).returns(good_config)
 
-    x = stub_request(:put, %r!https://s3.amazonaws.com/test_bucket/first/second/events/\d+/\d+/\d+/\d+.\d+.json.gz.gz!)
+    s3_request = stub_request(:put, %r!.*s3.amazonaws.com\/test_bucket\/first\/second\/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
       .to_return(status: 200, body: "", headers: {})
 
     ActiveRecord::Archiver.archive('events')
 
-    assert_requested x, :times => 7
+    assert_requested s3_request, :times => 0
   end
 
+  def test_archive_events_with_logger
+    ActiveRecord::Archiver.stubs(:config).returns(good_config)
+
+    s3_request = stub_request(:put, %r!.*s3.amazonaws.com\/test_bucket\/first\/second\/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
+      .to_return(status: 200, body: "", headers: {})
+
+    logger = mock()
+    logger.expects(:unknown).with("Archiving started")
+    logger.expects(:unknown).with("Archiving events")
+    logger.expects(:unknown).with("Done archiving events")
+    # logger.expects(:unknown).with(regexp_matches(/Saving .*/))
+    logger.expects(:unknown).with("Archiving complete")
+
+    ActiveRecord::Archiver.archive('events', logger:logger)
+
+    assert_requested s3_request, :times => 0
+  end
 
   def test_archive_badtype
     ActiveRecord::Archiver.stubs(:config).returns(config_with_sql_injection)
 
     assert_abort do
-      ActiveRecord::Archiver.archive('bad_type')
+      ActiveRecord::Archiver.archive('Connection')
     end
   end
 
+  def test_run_it_twice
+    ActiveRecord::Archiver.stubs(:config).returns(good_config)
+
+    s3_request = stub_request(:put, %r!s3.*/events/\d+/\d+/\d+/\d+.\d+.json.gz!)
+      .to_return(status: 200, body: "", headers: {})
+
+    ActiveRecord::Archiver.archive('events')
+    assert_requested s3_request, :times => 0
+
+    ActiveRecord::Archiver.archive('events')
+    ActiveRecord::Archiver.archive('events')
+    ActiveRecord::Archiver.archive('events')
+    assert_requested s3_request, :times => 0
+  end
 
 
 
@@ -58,15 +87,18 @@ class ActiveRecord::ArchiverTest < Minitest::Test
         "path"        => "%Y/%m/%d/%s.%6N.json.gz",
         "options" => {
           "access_key_id"     => "A",
-          "secret_access_key" => "B"
+          "secret_access_key" => "B",
+          "region"            => "us-east-1"
         }
       },
-      "collections"=>[
-        "connections",
+      "models"=>[
         {
-          "events"          => nil,
-          "track_by"        => "updated_at",
+          "model"           => "Connection"
+        },
+        {
           "model"           => "Activity",
+          "folder_name"     => "events",
+          "track_by"        => "updated_at",
           "starting_at"     => "2019-01-01",
           "max_memory_size" => 100
         }
@@ -78,11 +110,11 @@ class ActiveRecord::ArchiverTest < Minitest::Test
 
   def config_with_sql_injection
     {
-      "collections"=>[
+      "models"=>[
         {
-          "bad_type"        => nil,
-          "track_by"        => "weird_key",
-          "model"           => "Connection"
+          "model"           => "Connection",
+          "folder_name"     => "bad_type",
+          "track_by"        => "weird_key"
         }
       ]
     }

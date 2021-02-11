@@ -1,6 +1,7 @@
-require 'active_record/archiver/collection'
-require 'active_record/archiver/store/s3'
-require 'active_record/archiver/version'
+require_relative 'archiver/collection'
+require_relative 'archiver/store/s3'
+require_relative 'archiver/version'
+require_relative 'archiver/logger'
 
 module ActiveRecord
   module Archiver
@@ -9,8 +10,10 @@ module ActiveRecord
     def self.config
       @config ||= YAML.load(ERB.new(config_file.read).result)
 
-      rescue
-        abort('[ActiveRecord::Archiver] config/archiver.yml not found or contains errors')
+    rescue
+      message = 'config/archiver.yml not found or contains errors'
+      ActiveRecord::Archiver::Logger.unknown(message)
+      abort("[ActiveRecord::Archiver] #{message}")
     end
 
 
@@ -19,12 +22,21 @@ module ActiveRecord
     end
 
 
-    def self.archive(only=nil)
-      collections.select{|x| only.nil? || Array(only).include?(x.name)}.each do |collection|
-        collection.find_in_json_batches do |json_array|
+    def self.archive(only=nil, logger:nil)
+      ActiveRecord::Archiver::Logger.init(logger)
+      ActiveRecord::Archiver::Logger.unknown("Archiving started")
+
+      specified_collections = Array(only)
+      collections.select{|x| only.nil? || specified_collections.include?(x.name)}.each do |collection|
+
+        ActiveRecord::Archiver::Logger.unknown("Archiving #{collection.name}")
+        collection.find_in_json_batches() do |json_array|
           store.write(json_array, collection.name)
         end
+        ActiveRecord::Archiver::Logger.unknown("Done archiving #{collection.name}")
       end
+
+      ActiveRecord::Archiver::Logger.unknown("Archiving complete")
     end
 
 
@@ -42,7 +54,7 @@ module ActiveRecord
 
 
     def self.collections
-      config['collections'].map do |args|
+      config['models'].map do |args|
         Collection.new(args)
       end
     end

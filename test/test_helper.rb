@@ -1,3 +1,4 @@
+
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 require "active_record/archiver"
 
@@ -9,7 +10,13 @@ require 'support/rails_activerecord_simulation'
 require 'mocha/minitest'
 require 'webmock/minitest'
 
+require 'pry'
 require 'byebug'
+
+require "minitest/autorun"
+require "minitest/reporters"
+
+Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new(:color => false)]
 
 
 def abort(string)
@@ -22,9 +29,19 @@ def assert_abort
 
   yield
 
-  rescue SystemExit => e
-    seen_exception = true
+rescue SystemExit
+  seen_exception = true
 
-  ensure
-    assert seen_exception
+ensure
+  assert seen_exception
+end
+
+class Minitest::Test
+
+  def setup
+
+    #Rails.cache.clear
+    super
+  end
+
 end

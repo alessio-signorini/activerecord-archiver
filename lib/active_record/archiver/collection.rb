@@ -1,25 +1,26 @@
+require 'active_support/core_ext/string'
+require 'active_record'
+
 module ActiveRecord; module Archiver
   class Collection
 
 
     def initialize(args)
-      @args = args.is_a?(String) ? {'name' => args} : args
+      @args = args.is_a?(String) ? {'model' => args} : args
 
       validate
     end
 
 
     def find_in_json_batches(args={})
-      relation = base_object.where(clause)
-
-      in_json_batches(relation, args) do |batch, max|
+      in_json_batches(args) do |batch, max|
         yield(batch) && update_last_fetched(max)
       end
     end
 
 
     def name
-      @args['name'] || @args.keys.first
+      @args['folder_name'] || model.underscore.pluralize
     end
 
 
@@ -27,12 +28,13 @@ module ActiveRecord; module Archiver
 
 
     def validate
+
       unless rails_class.present?
-        abort("[ActiveRecord::Archiver] Can not find any class for #{model||name}']}")
+        abort("[ActiveRecord::Archiver] Can not find any class for #{model}']}")
       end
 
       unless rails_class.new.respond_to?(track_by)
-        abort("[ActiveRecord::Archiver] Possible SQL-injection, track_by is #{track_by}")
+        abort("[ActiveRecord::Archiver] Possible SQL-injection, track_by is #{track_by} and #{model} does not have that field.")
       end
     end
 
@@ -42,8 +44,18 @@ module ActiveRecord; module Archiver
     end
 
 
-    def clause
-      last_fetched ? ["#{track_by} > ?", last_fetched] : {}
+    def create_relation starting_after:nil, ending_with:nil
+      relation = base_object
+
+      if starting_after.present?
+        relation = relation.where(["#{track_by} > ?", starting_after])
+      end
+
+      if ending_with.present?
+        relation = relation.where(["#{track_by} <= ?", ending_with])
+      end
+
+      return relation
     end
 
 
@@ -52,15 +64,28 @@ module ActiveRecord; module Archiver
     end
 
 
+    def batch_size
+      size = @args['batch_size'].to_i
+      return size > 0 ? size : 1000
+    end
+
+
     def update_last_fetched(batch_max)
-      if last_fetched.nil? || batch_max > last_fetched
+
+      if last_fetched.nil? || (!batch_max.nil? && last_fetched < batch_max)
         Rails.cache.write(cache_key, batch_max)
       end
     end
 
 
+    def other_update_last_fetched(batch_max)
+      last = [batch_max, last_fetched].compact.max
+
+      Rails.cache.write(cache_key, batch_max) if last
+    end
+
     def cache_key
-      ['activerecord-archiver', rails_class.name.downcase].join('/')
+      ['activerecord-archiver', rails_class.name.downcase]
     end
 
 
@@ -80,7 +105,7 @@ module ActiveRecord; module Archiver
 
 
     def rails_class
-      @rails_class ||= (model || name.downcase.camelize.singularize).constantize
+      @rails_class ||= model.constantize
     end
 
 
@@ -90,7 +115,7 @@ module ActiveRecord; module Archiver
 
 
     def item_size
-      @item_size ||= base_object.last.to_json.size
+      @item_size ||= base_object.last.attributes.to_json.size
     end
 
 
@@ -100,26 +125,41 @@ module ActiveRecord; module Archiver
 
 
     def max_memory_size
-      @args['max_memory_size'] || 50000000
+      @args['max_memory_size'] || 50_000_000
     end
 
 
     def append(data, batch)
-      data.push(*batch.map{|x| x.to_json})
+      data.push(*batch.map{|x| x.attributes.to_json})
     end
 
 
-    def in_json_batches(relation, args={})
+    def in_json_batches(args={})
       data = []
+      batch = []
       max  = nil
 
-      relation.find_in_batches(args) do |batch|
+      previous_stopping_point = last_fetched || base_object.minimum(track_by)
+      max_for_model = base_object.maximum(track_by)
+
+      while true do
+        begin
+          ActiveRecord::Base.uncached do
+            batch = create_relation(starting_after:previous_stopping_point, ending_with:max_for_model).order("#{track_by}").limit(batch_size).to_a
+          end
+        rescue => e
+          ActiveRecord::Archiver::Logger.fatal(e.message)
+          raise
+        end
+
+        break if batch.empty?
+
         batch_max = batch.pluck(track_by).max
+        previous_stopping_point = batch_max
         max = batch_max if max.nil? || batch_max > max
+        data.push(*batch.map{|x| x.attributes.to_json})
 
-        data += batch.map{|x| x.to_json}
-
-        if data.size > max_batch_size
+        if data.size > max_batch_size || data.sum(&:size) > max_memory_size
           yield(data, max) && data.clear
         end
       end

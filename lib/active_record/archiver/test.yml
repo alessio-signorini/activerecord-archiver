@@ -1,0 +1,14 @@
+storage:
+  type: S3
+  bucket: test_bucket
+  prefix: 'first/second/%s'
+  path: '%Y/%m/%d/%s.%6N.json.gz'
+  options:
+    access_key_id: 'A'
+    secret_access_key: 'B'
+collections:
+  - connections
+  - events:
+    track_by: updated_at
+    model: Activity
+    starting_at: '2019-01-01'
