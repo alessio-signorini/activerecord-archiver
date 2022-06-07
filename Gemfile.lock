@@ -28,7 +28,7 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     hashdiff (0.3.8)
-    jmespath (1.4.0)
+    jmespath (1.6.1)
     metaclass (0.0.4)
     minitest (5.11.3)
     mocha (1.8.0)
